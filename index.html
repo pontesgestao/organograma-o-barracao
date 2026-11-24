@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#C01012">
+<title>Organograma O Barracão</title>
+<link rel="icon" type="image/png" href="https://pontesgestao.github.io/controle-de-estoque-o-barracao/img/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: cabeçalho com resumo da equipe, árvore Empresa → Direção → Setores → Turnos → Pessoas, e as bases (cargas horárias e salários) embaixo. */
+:root {
+  --marca: #C01012; --marca-forte: #8F0A0C; --marca-suave: #FBE3E2;
+  --fundo: #FBF6F5; --cartao: #FFFFFF; --tinta: #231716; --suave: #6E5B5A; --linha: #E7D6D4;
+  --ok: #1F7A48; --ok-suave: #E3F3EA; --aviso: #8A5A00; --aviso-suave: #FFF2D2;
+  --manha: #B86A00; --noite: #3B4A8C;
+  --f-titulo: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  --f-texto: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --raio: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --marca: #F0544F; --marca-forte: #FF8A85; --marca-suave: #3A1716;
+  --fundo: #171211; --cartao: #221A19; --tinta: #F3E9E8; --suave: #B9A6A4; --linha: #3B2E2C;
+  --ok: #6FD39C; --ok-suave: #173326; --aviso: #F2C063; --aviso-suave: #352A12;
+  --manha: #F2B25C; --noite: #9DAEF5; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --marca: #F0544F; --marca-forte: #FF8A85; --marca-suave: #3A1716;
+  --fundo: #171211; --cartao: #221A19; --tinta: #F3E9E8; --suave: #B9A6A4; --linha: #3B2E2C;
+  --ok: #6FD39C; --ok-suave: #173326; --aviso: #F2C063; --aviso-suave: #352A12;
+  --manha: #F2B25C; --noite: #9DAEF5; color-scheme: dark; }
+
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+body { background: var(--fundo); color: var(--tinta); font: 15px/1.45 var(--f-texto); }
+h1, h2, h3 { font-family: var(--f-titulo); font-weight: 600; margin: 0; line-height: 1.15; text-wrap: balance; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--marca); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.pagina { max-width: 1280px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 22px; }
+
+.topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.topo h1 { font-size: 1.9rem; color: var(--marca); }
+.topo p { margin: 4px 0 0; color: var(--suave); }
+.resumo { display: flex; flex-wrap: wrap; gap: 8px; }
+.pilula { background: var(--cartao); border: 1px solid var(--linha); border-radius: 99px; padding: 6px 12px; font-weight: 700; font-size: .9rem; }
+.pilula b { font-family: var(--f-titulo); font-weight: 600; color: var(--marca); }
+
+.faixa { border-radius: var(--raio); padding: 12px 14px; font-weight: 700; background: var(--cartao); border: 1px dashed var(--linha); color: var(--suave); }
+.faixa.erro { background: var(--marca-suave); border-color: transparent; color: var(--marca-forte); }
+
+.btn { border: 0; border-radius: 9px; padding: 8px 14px; font-weight: 800; min-height: 40px; background: var(--marca); color: #fff; }
+.btn.sec { background: transparent; color: var(--tinta); border: 1.5px solid var(--linha); }
+.btn.perigo { background: transparent; color: var(--marca-forte); border: 1.5px solid var(--marca-suave); }
+.btn:disabled { opacity: .55; cursor: default; }
+
+/* ---------- Árvore ---------- */
+.arvore-wrap { overflow-x: auto; padding-bottom: 8px; }
+.arvore, .arvore ul { list-style: none; margin: 0; padding: 0; }
+.arvore { display: flex; justify-content: center; min-width: max-content; padding: 4px 8px; }
+.arvore ul { display: flex; justify-content: center; padding-top: 22px; position: relative; }
+.arvore li { position: relative; padding: 22px 6px 0; display: flex; flex-direction: column; align-items: center; }
+.arvore > li { padding-top: 0; }
+/* linhas: traço horizontal entre irmãos + traço vertical até o nó */
+.arvore li::before, .arvore li::after { content: ""; position: absolute; top: 0; width: 50%; height: 22px; border-top: 2px solid var(--linha); }
+.arvore li::before { right: 50%; }
+.arvore li::after { left: 50%; border-left: 2px solid var(--linha); }
+.arvore li:only-child::before, .arvore li:only-child::after { display: none; }
+.arvore li:only-child { padding-top: 0; }
+.arvore li:first-child::before, .arvore li:last-child::after { border: 0; }
+.arvore li:last-child::before { border-right: 2px solid var(--linha); border-radius: 0 8px 0 0; }
+.arvore li:first-child::after { border-radius: 8px 0 0 0; }
+.arvore ul::before { content: ""; position: absolute; top: 0; left: 50%; height: 22px; border-left: 2px solid var(--linha); }
+.arvore > li::before, .arvore > li::after { display: none; }
+
+.no { background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--raio); padding: 10px 12px; text-align: center; min-width: 150px; }
+.no.empresa { background: var(--marca); color: #fff; border: 0; padding: 12px 22px; }
+.no.empresa h2 { font-size: 1.35rem; }
+.no.empresa small { display: block; opacity: .85; font-weight: 700; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+.no.setor { border: 2px solid var(--tinta); min-width: 170px; }
+.no.setor h3 { font-size: 1.1rem; }
+.no .meta { color: var(--suave); font-size: .8rem; font-weight: 700; }
+.turno { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: .78rem; letter-spacing: .05em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; border: 1.5px solid currentColor; background: var(--cartao); }
+.turno.manha { color: var(--manha); }
+.turno.noite { color: var(--noite); }
+.turno.unico { color: var(--suave); }
+.pessoas { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; width: 190px; }
+.pessoa { text-align: left; background: var(--cartao); border: 1px solid var(--linha); border-left: 4px solid var(--marca); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; width: 100%; }
+.pessoa:hover { border-color: var(--marca); }
+.pessoa strong { font-size: .98rem; }
+.pessoa .cargo { color: var(--marca-forte); font-weight: 800; font-size: .8rem; }
+.pessoa .det { color: var(--suave); font-size: .8rem; font-weight: 600; }
+.pessoa .sem { color: var(--aviso); font-weight: 800; }
+.add { border: 1.5px dashed var(--linha); background: transparent; color: var(--suave); border-radius: 10px; padding: 7px; font-weight: 800; font-size: .85rem; width: 100%; }
+.add:hover { color: var(--marca); border-color: var(--marca); }
+
+/* Celular: a árvore vira uma lista recuada, de cima para baixo. */
+@media (max-width: 760px) {
+  .arvore-wrap { overflow: visible; }
+  .arvore, .arvore ul { display: block; min-width: 0; padding: 0; }
+  .arvore ul { padding-left: 18px; margin-left: 10px; border-left: 2px solid var(--linha); }
+  .arvore ul::before, .arvore li::before, .arvore li::after { display: none; }
+  .arvore li { display: block; padding: 10px 0 0; }
+  .arvore li:only-child { padding-top: 10px; }
+  .no { text-align: left; min-width: 0; }
+  .no.setor { display: inline-block; }
+  .pessoas { width: auto; max-width: 420px; }
+}
+
+/* ---------- Bases ---------- */
+.bases { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; }
+@media (max-width: 900px) { .bases { grid-template-columns: minmax(0, 1fr); } }
+.cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--raio); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.cartao-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cartao-cab h2 { font-size: 1.2rem; }
+.dica { color: var(--suave); font-size: .88rem; margin: 0; }
+.tabela { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); padding: 6px 6px; border-bottom: 1px solid var(--linha); white-space: nowrap; }
+td:first-child .campo-tab { min-width: 150px; }
+td { padding: 6px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+td.r, th.r { text-align: right; }
+.campo-tab { width: 100%; min-width: 70px; border: 1.5px solid var(--linha); border-radius: 8px; padding: 6px 8px; background: var(--fundo); min-height: 36px; }
+.campo-tab:focus { outline: none; border-color: var(--marca); }
+.mini { border: 0; background: none; color: var(--suave); font-weight: 800; padding: 6px; min-height: 36px; }
+.mini:hover { color: var(--marca); }
+.uso { font-size: .78rem; color: var(--suave); font-weight: 700; white-space: nowrap; }
+
+/* ---------- Diálogo ---------- */
+dialog { border: 0; border-radius: 16px; padding: 0; width: min(520px, calc(100vw - 32px)); background: var(--cartao); color: var(--tinta); box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+dialog::backdrop { background: rgba(20, 8, 8, .45); }
+.form { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.form h2 { font-size: 1.3rem; }
+.grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .grade { grid-template-columns: 1fr; } }
+label.c { display: flex; flex-direction: column; gap: 4px; font-weight: 800; font-size: .85rem; min-width: 0; }
+label.c input, label.c select { border: 1.5px solid var(--linha); border-radius: 9px; padding: 8px 10px; background: var(--fundo); min-height: 42px; width: 100%; }
+label.c input:focus, label.c select:focus { outline: none; border-color: var(--marca); }
+.resumo-carga { background: var(--fundo); border-radius: 10px; padding: 8px 10px; font-size: .88rem; color: var(--suave); font-weight: 700; }
+.acoes { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.acoes div { display: flex; gap: 8px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--tinta); color: var(--fundo); padding: 10px 16px; border-radius: 10px; font-weight: 800; z-index: 50; max-width: calc(100% - 32px); }
+.toast.erro { background: var(--marca); color: #fff; }
+.login { max-width: 400px; margin: 0 auto; width: 100%; }
+.sair { min-height: 34px; padding: 4px 12px; font-size: .85rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header class="topo">
+    <div>
+      <h1>Organograma O Barracão</h1>
+      <p>Toque numa pessoa para editar, ou em <strong>+ Adicionar</strong> dentro do setor e turno.</p>
+    </div>
+    <div class="resumo" id="resumo"></div>
+  </header>
+
+  <div id="faixa" class="faixa">Carregando a equipe…</div>
+
+  <section class="arvore-wrap" aria-label="Organograma">
+    <ul class="arvore" id="arvore"></ul>
+  </section>
+
+  <section class="bases">
+    <div class="cartao">
+      <div class="cartao-cab"><h2>Cargas horárias</h2><button class="btn sec" id="nova-carga">+ Nova carga horária</button></div>
+      <p class="dica">Cadastre aqui os horários e escolha um deles para cada funcionário. As horas por dia já descontam o intervalo.</p>
+      <div class="tabela"><table>
+        <thead><tr><th>Nome</th><th>Entrada</th><th>Saída</th><th>Intervalo (min)</th><th>Dias/sem.</th><th class="r">Horas</th><th></th></tr></thead>
+        <tbody id="tab-cargas"></tbody>
+      </table></div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-cab"><h2>Salários</h2><button class="btn sec" id="novo-salario">+ Nova faixa</button></div>
+      <p class="dica">Faixas de salário mensal. Mudou o valor aqui, muda para todos da faixa.</p>
+      <div class="tabela"><table>
+        <thead><tr><th>Faixa</th><th>Valor (R$)</th><th></th></tr></thead>
+        <tbody id="tab-salarios"></tbody>
+      </table></div>
+    </div>
+  </section>
+</div>
+
+<dialog id="dlg">
+  <form class="form" id="form" method="dialog">
+    <h2 id="dlg-titulo">Funcionário</h2>
+    <label class="c">Nome<input id="f-nome" required autocomplete="off"></label>
+    <div class="grade">
+      <label class="c">Cargo<input id="f-cargo" list="cargos" autocomplete="off" placeholder="Ex.: Cozinheiro(a)"></label>
+      <label class="c">Setor<select id="f-setor"></select></label>
+      <label class="c">Turno<select id="f-turno"></select></label>
+      <label class="c">Carga horária<select id="f-carga"></select></label>
+      <label class="c">Salário<select id="f-salario"></select></label>
+      <label class="c" id="f-valor-wrap" hidden>Valor próprio (R$)<input id="f-valor" inputmode="decimal" placeholder="0,00"></label>
+    </div>
+    <div class="resumo-carga" id="f-resumo"></div>
+    <div class="acoes">
+      <button type="button" class="btn perigo" id="f-excluir">Excluir</button>
+      <div><button type="button" class="btn sec" id="f-cancelar">Cancelar</button><button type="submit" class="btn" id="f-salvar">Salvar</button></div>
+    </div>
+  </form>
+</dialog>
+<datalist id="cargos">
+  <option value="Proprietário(a)"><option value="Sócio(a)"><option value="Gerente"><option value="Cozinheiro(a)"><option value="Auxiliar de cozinha">
+  <option value="Chapeiro(a)"><option value="Garçom / Garçonete"><option value="Atendente"><option value="Operador(a) de caixa">
+  <option value="Entregador(a) / Motoboy"><option value="Auxiliar de limpeza">
+</datalist>
+
+<script>
+(function () {
+  'use strict';
+  const SETORES = [
+    { id: 'cozinha', nome: 'Cozinha' }, { id: 'salao', nome: 'Salão' },
+    { id: 'delivery', nome: 'Delivery' }, { id: 'caixa', nome: 'Caixa' },
+  ];
+  const TURNOS = [{ id: 'manha', nome: 'Turno da manhã' }, { id: 'noite', nome: 'Turno da noite' }];
+  const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+
+  const URL_API = 'https://script.google.com/macros/s/AKfycbyb1XDCUwXE-yitnZDH9phJPfb---D3uie-IBUaDD6GJsspKKDnQnQQ-JOjTytLj53p/exec';
+  const CHAVE_LOGIN = 'obarracao-painel-login-v1'; // o mesmo login do Painel DRE
+  let login = null;
+  try { login = JSON.parse(localStorage.getItem(CHAVE_LOGIN)); } catch (e) { login = null; }
+  let db = null; // true quando os dados carregaram e dá para editar
+  const TIPO = { funcionarios: 'funcionario', cargas: 'carga', salarios: 'salario' };
+  async function postar(corpo) {
+    let r;
+    try { r = await fetch(URL_API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) }); }
+    catch (e) { throw new Error('Sem conexão. Confira a internet e tente de novo.'); }
+    try { return await r.json(); } catch (e) { throw new Error('O painel respondeu de um jeito inesperado (HTTP ' + r.status + ').'); }
+  }
+  async function chamar(fn, ...args) {
+    const j = await postar({ fn, args, token: login && login.token });
+    if (!j.ok) {
+      if (/^LOGIN/.test(j.erro || '')) { sair(j.erro.replace(/^LOGIN:\s*/, '')); }
+      throw new Error(j.erro || 'Erro');
+    }
+    return j.resultado;
+  }
+  const estado = { funcionarios: [], cargas: [], salarios: [] };
+  const carregou = { funcionarios: false, cargas: false, salarios: false };
+
+  function toast(msg, erro) {
+    const t = el('div', 'toast' + (erro ? ' erro' : ''), msg);
+    t.setAttribute('role', 'status');
+    document.body.append(t);
+    setTimeout(() => t.remove(), erro ? 6000 : 2500);
+  }
+  const minutos = (h) => { const m = /^(\d{1,2}):(\d{2})$/.exec(h || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  function horasDia(c) {
+    const a = minutos(c.entrada), b = minutos(c.saida);
+    if (a == null || b == null) return null;
+    let d = b - a; if (d <= 0) d += 24 * 60;
+    return Math.max(0, d - (Number(c.intervalo) || 0)) / 60;
+  }
+  const fmtH = (h) => { if (h == null) return '–'; const m = Math.round(h * 60); return Math.floor(m / 60) + 'h' + (m % 60 ? String(m % 60).padStart(2, '0') : ''); };
+  const fmtInt = (n) => { n = Number(n) || 0; return n >= 60 ? fmtH(n / 60) : n + ' min'; };
+  const lerValor = (t) => { let s = String(t == null ? '' : t).replace(/R\$\s?/, '').trim(); if (!s) return null; if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const n = Number(s); return isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null; };
+  const porNome = (a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+  const carga = (id) => estado.cargas.find((c) => c.id === id);
+  const faixa = (id) => estado.salarios.find((s) => s.id === id);
+  function salarioDe(f) {
+    if (f.salarioId === '__proprio__') return f.salarioValor != null ? Number(f.salarioValor) : null;
+    const s = faixa(f.salarioId); return s && s.valor != null ? Number(s.valor) : null;
+  }
+
+  // ---------- Desenho ----------
+  function cartaoPessoa(f) {
+    const b = el('button', 'pessoa'); b.type = 'button';
+    b.append(el('strong', '', f.nome || 'Sem nome'));
+    if (f.cargo) b.append(el('span', 'cargo', f.cargo));
+    const c = carga(f.cargaId);
+    b.append(c ? el('span', 'det num', `${c.entrada || '?'}–${c.saida || '?'} · intervalo ${fmtInt(c.intervalo)}`) : el('span', 'det sem', 'Sem carga horária'));
+    const s = salarioDe(f);
+    b.append(s != null ? el('span', 'det num', brl.format(s) + ' / mês') : el('span', 'det sem', 'Sem salário'));
+    b.onclick = () => abrir(f);
+    return b;
+  }
+  function blocoPessoas(lista, setor, turno, rotulo) {
+    const box = el('div', 'pessoas');
+    lista.slice().sort(porNome).forEach((f) => box.append(cartaoPessoa(f)));
+    const add = el('button', 'add', '+ Adicionar'); add.type = 'button';
+    add.setAttribute('aria-label', 'Adicionar funcionário em ' + rotulo);
+    add.onclick = () => abrir(null, setor, turno);
+    add.disabled = !db;
+    box.append(add);
+    return box;
+  }
+  function desenhar() {
+    const fs = estado.funcionarios;
+    const arv = $('arvore'); arv.replaceChildren();
+    const raiz = el('li');
+    const emp = el('div', 'no empresa'); emp.append(el('small', '', 'Empresa'), el('h2', '', 'O Barracão'));
+    raiz.append(emp);
+    const ulDir = el('ul'); const liDir = el('li');
+    const dir = el('div', 'no setor'); dir.append(el('h3', '', 'Direção'), el('div', 'meta', 'Dono e sócios'));
+    liDir.append(dir, blocoPessoas(fs.filter((f) => f.setor === 'direcao'), 'direcao', '', 'Direção'));
+    const ulSet = el('ul');
+    SETORES.forEach((s) => {
+      const doSetor = fs.filter((f) => f.setor === s.id);
+      const li = el('li');
+      const no = el('div', 'no setor'); no.append(el('h3', '', s.nome), el('div', 'meta num', doSetor.length + (doSetor.length === 1 ? ' pessoa' : ' pessoas')));
+      li.append(no);
+      const ulT = el('ul');
+      TURNOS.forEach((t) => {
+        const lt = el('li');
+        lt.append(el('span', 'turno ' + t.id, t.nome));
+        lt.append(blocoPessoas(doSetor.filter((f) => f.turno === t.id), s.id, t.id, s.nome + ', ' + t.nome));
+        ulT.append(lt);
+      });
+      const semTurno = doSetor.filter((f) => !TURNOS.some((t) => t.id === f.turno));
+      if (semTurno.length) {
+        const lt = el('li'); lt.append(el('span', 'turno unico', 'Sem turno'), blocoPessoas(semTurno, s.id, '', s.nome)); ulT.append(lt);
+      }
+      li.append(ulT); ulSet.append(li);
+    });
+    liDir.append(ulSet); ulDir.append(liDir); raiz.append(ulDir); arv.append(raiz);
+
+    // Resumo
+    const res = $('resumo'); res.replaceChildren();
+    const folha = fs.reduce((t, f) => t + (salarioDe(f) || 0), 0);
+    const semSal = fs.filter((f) => salarioDe(f) == null).length;
+    const p = (rot, val) => { const x = el('span', 'pilula'); x.append(rot + ' ', el('b', 'num', val)); res.append(x); };
+    p('Funcionários', String(fs.length));
+    p('Folha mensal', brl.format(folha));
+    if (semSal) p('Sem salário', String(semSal));
+
+    desenharCargas(); desenharSalarios();
+  }
+
+  function usoDe(campo, id) { const n = estado.funcionarios.filter((f) => f[campo] === id).length; return n ? n + (n === 1 ? ' pessoa' : ' pessoas') : ''; }
+  function campoTab(valor, tipo, salvar, rotulo, extra) {
+    const i = el('input', 'campo-tab' + (extra ? ' ' + extra : '')); i.type = tipo || 'text'; i.value = valor == null ? '' : valor;
+    i.setAttribute('aria-label', rotulo); i.disabled = !db;
+    i.onchange = () => salvar(i.value);
+    return i;
+  }
+  function botaoExcluir(rotulo, emUso, apagar) {
+    const b = el('button', 'mini', '✕'); b.type = 'button'; b.setAttribute('aria-label', 'Excluir ' + rotulo); b.disabled = !db;
+    b.onclick = () => {
+      if (emUso) { toast(`Em uso por ${emUso}. Troque a opção dessas pessoas antes de excluir.`, true); return; }
+      if (b.dataset.conf) { apagar(); return; }
+      b.dataset.conf = '1'; b.textContent = 'Excluir?'; setTimeout(() => { b.textContent = '✕'; delete b.dataset.conf; }, 3000);
+    };
+    return b;
+  }
+  function desenharCargas() {
+    const tb = $('tab-cargas'); tb.replaceChildren();
+    if (!estado.cargas.length) { const tr = el('tr'); const td = el('td', 'dica', carregou.cargas ? 'Nenhuma carga horária ainda. Toque em + Nova carga horária.' : 'Carregando…'); td.colSpan = 7; tr.append(td); tb.append(tr); return; }
+    estado.cargas.slice().sort(porNome).forEach((c) => {
+      const tr = el('tr');
+      const up = (campo, conv) => (v) => salvarDoc('cargas', c.id, { [campo]: conv ? conv(v) : v.trim() });
+      const td = (n) => { const x = el('td'); x.append(n); return x; };
+      tr.append(td(campoTab(c.nome, 'text', up('nome'), 'Nome da carga horária')));
+      tr.append(td(campoTab(c.entrada, 'time', up('entrada'), 'Entrada')));
+      tr.append(td(campoTab(c.saida, 'time', up('saida'), 'Saída')));
+      tr.append(td(campoTab(c.intervalo, 'number', up('intervalo', (v) => Math.max(0, Number(v) || 0)), 'Intervalo em minutos')));
+      tr.append(td(campoTab(c.dias, 'number', up('dias', (v) => Math.min(7, Math.max(1, Number(v) || 6))), 'Dias por semana')));
+      const h = horasDia(c);
+      const th = el('td', 'r num'); th.append(el('div', '', fmtH(h) + '/dia'), el('div', 'uso', h != null ? fmtH(h * (Number(c.dias) || 0)) + '/sem.' : ''));
+      tr.append(th);
+      const ta = el('td', 'r'); const uso = usoDe('cargaId', c.id);
+      if (uso) ta.append(el('div', 'uso', uso));
+      ta.append(botaoExcluir(c.nome || 'carga', uso, () => apagarDoc('cargas', c.id)));
+      tr.append(ta); tb.append(tr);
+    });
+  }
+  function desenharSalarios() {
+    const tb = $('tab-salarios'); tb.replaceChildren();
+    if (!estado.salarios.length) { const tr = el('tr'); const td = el('td', 'dica', carregou.salarios ? 'Nenhuma faixa ainda. Toque em + Nova faixa.' : 'Carregando…'); td.colSpan = 3; tr.append(td); tb.append(tr); return; }
+    estado.salarios.slice().sort(porNome).forEach((s) => {
+      const tr = el('tr');
+      const td = (n) => { const x = el('td'); x.append(n); return x; };
+      tr.append(td(campoTab(s.nome, 'text', (v) => salvarDoc('salarios', s.id, { nome: v.trim() }), 'Nome da faixa')));
+      const v = campoTab(s.valor != null ? Number(s.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '', 'text', (t) => {
+        const n = lerValor(t); if (t.trim() && n == null) { toast('Digite um valor como 1.800,00.', true); desenhar(); return; }
+        salvarDoc('salarios', s.id, { valor: n });
+      }, 'Valor da faixa', 'num');
+      v.inputMode = 'decimal'; v.placeholder = 'definir';
+      tr.append(td(v));
+      const ta = el('td', 'r'); const uso = usoDe('salarioId', s.id);
+      if (uso) ta.append(el('div', 'uso', uso));
+      ta.append(botaoExcluir(s.nome || 'faixa', uso, () => apagarDoc('salarios', s.id)));
+      tr.append(ta); tb.append(tr);
+    });
+  }
+
+  // ---------- Diálogo do funcionário ----------
+  let editando = null;
+  function opcoes(sel, lista, atual, vazio) {
+    sel.replaceChildren();
+    if (vazio) { const o = el('option', '', vazio); o.value = ''; sel.append(o); }
+    lista.forEach(([v, t]) => { const o = el('option', '', t); o.value = v; if (v === atual) o.selected = true; sel.append(o); });
+  }
+  function turnosPara(setor) { return setor === 'direcao' ? [['', '— sem turno —']] : TURNOS.map((t) => [t.id, t.nome]).concat([['', '— sem turno —']]); }
+  function atualizarResumo() {
+    const c = carga($('f-carga').value);
+    $('f-valor-wrap').hidden = $('f-salario').value !== '__proprio__';
+    $('f-resumo').textContent = c ? `${c.entrada || '?'} às ${c.saida || '?'} · intervalo de ${fmtInt(c.intervalo)} · ${fmtH(horasDia(c))} por dia, ${Number(c.dias) || '?'} dias por semana` : 'Escolha uma carga horária (cadastre novas lá embaixo, em Cargas horárias).';
+  }
+  function abrir(f, setor, turno) {
+    editando = f;
+    $('dlg-titulo').textContent = f ? 'Editar funcionário' : 'Novo funcionário';
+    $('f-nome').value = f ? f.nome || '' : '';
+    $('f-cargo').value = f ? f.cargo || '' : (setor === 'direcao' ? 'Proprietário(a)' : '');
+    const st = f ? f.setor : setor;
+    opcoes($('f-setor'), [['direcao', 'Direção']].concat(SETORES.map((s) => [s.id, s.nome])), st);
+    opcoes($('f-turno'), turnosPara(st), f ? f.turno || '' : turno || '');
+    opcoes($('f-carga'), estado.cargas.slice().sort(porNome).map((c) => [c.id, c.nome || 'Sem nome']), f ? f.cargaId : '', '— escolha —');
+    opcoes($('f-salario'), estado.salarios.slice().sort(porNome).map((s) => [s.id, (s.nome || 'Faixa') + (s.valor != null ? ' · ' + brl.format(s.valor) : '')]).concat([['__proprio__', 'Valor próprio…']]), f ? f.salarioId : '', '— escolha —');
+    $('f-valor').value = f && f.salarioValor != null ? Number(f.salarioValor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+    $('f-excluir').hidden = !f; $('f-excluir').textContent = 'Excluir';
+    atualizarResumo();
+    $('dlg').showModal();
+    setTimeout(() => $('f-nome').focus(), 30);
+  }
+  $('f-setor').onchange = () => { opcoes($('f-turno'), turnosPara($('f-setor').value), $('f-turno').value); };
+  $('f-carga').onchange = atualizarResumo;
+  $('f-salario').onchange = atualizarResumo;
+  $('f-cancelar').onclick = () => $('dlg').close();
+  $('f-excluir').onclick = async () => {
+    const b = $('f-excluir');
+    if (b.textContent !== 'Confirmar exclusão') { b.textContent = 'Confirmar exclusão'; return; }
+    try { await apagarDoc('funcionarios', editando.id); $('dlg').close(); toast('Funcionário excluído'); } catch (e) { /* toast já mostrado */ }
+  };
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = $('f-nome').value.trim();
+    if (!nome) { toast('Digite o nome.', true); return; }
+    const salarioId = $('f-salario').value;
+    const valor = lerValor($('f-valor').value);
+    if (salarioId === '__proprio__' && valor == null) { toast('Digite o valor do salário, como 1.800,00.', true); return; }
+    const dados = { nome, cargo: $('f-cargo').value.trim(), setor: $('f-setor').value, turno: $('f-turno').value,
+      cargaId: $('f-carga').value, salarioId, salarioValor: salarioId === '__proprio__' ? valor : null };
+    $('f-salvar').disabled = true;
+    try {
+      await salvarDoc('funcionarios', editando ? editando.id : '', dados, true);
+      $('dlg').close(); toast(editando ? 'Alterações salvas' : nome + ' adicionado(a)');
+    } catch (err) { /* aviso já mostrado */ }
+    finally { $('f-salvar').disabled = false; }
+  });
+
+  // ---------- Banco ----------
+  // Grava o item inteiro na aba "Equipe" da planilha e atualiza a tela.
+  async function salvarDoc(col, id, dados, completo) {
+    if (!db) return null;
+    const atual = id ? estado[col].find((x) => x.id === id) : null;
+    const corpo = Object.assign({}, completo || !atual ? {} : atual, dados);
+    delete corpo.id;
+    try {
+      const novoId = await chamar('salvarItemEquipe', TIPO[col], id || '', corpo);
+      const item = Object.assign({ id: novoId }, corpo);
+      estado[col] = estado[col].filter((x) => x.id !== novoId).concat([item]);
+      desenhar();
+      return novoId;
+    } catch (e) { toast('Não foi possível salvar: ' + e.message, true); desenhar(); throw e; }
+  }
+  async function apagarDoc(col, id) {
+    try { await chamar('excluirItemEquipe', TIPO[col], id); estado[col] = estado[col].filter((x) => x.id !== id); desenhar(); }
+    catch (e) { toast('Não foi possível excluir: ' + e.message, true); throw e; }
+  }
+  $('nova-carga').onclick = () => salvarDoc('cargas', '', { nome: 'Nova carga horária', entrada: '08:00', saida: '16:20', intervalo: 60, dias: 6 }).catch(() => {});
+  $('novo-salario').onclick = () => salvarDoc('salarios', '', { nome: 'Nova faixa', valor: null }).catch(() => {});
+
+  // ---------- Login (o mesmo do Painel DRE) ----------
+  function sair(msg) {
+    login = null; db = null;
+    try { localStorage.removeItem(CHAVE_LOGIN); } catch (e) { /* sem armazenamento */ }
+    telaLogin(msg || '');
+  }
+  function telaLogin(msg) {
+    document.querySelectorAll('.arvore-wrap, .bases, .resumo').forEach((x) => { x.hidden = true; });
+    const f = $('faixa');
+    f.hidden = false; f.className = 'cartao login';
+    f.innerHTML = `<h2>Entrar</h2><p class="dica">Use o mesmo usuário e senha do Painel DRE. Só quem tem Acesso total vê a equipe.</p>
+      ${msg ? `<p class="faixa erro"></p>` : ''}
+      <form id="form-login" class="form" style="padding:0">
+        <label class="c">Usuário<input id="l-usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+        <label class="c">Senha<input id="l-senha" type="password" autocomplete="current-password" required></label>
+        <button class="btn" id="l-entrar" type="submit">Entrar</button>
+      </form>`;
+    if (msg) f.querySelector('.faixa.erro').textContent = msg;
+    $('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const b = $('l-entrar'); b.disabled = true; b.textContent = 'Entrando…';
+      try {
+        const j = await postar({ acao: 'login', usuario: $('l-usuario').value, senha: $('l-senha').value });
+        if (!j.ok) throw new Error(j.erro || 'Não foi possível entrar.');
+        login = j.resultado;
+        try { localStorage.setItem(CHAVE_LOGIN, JSON.stringify(login)); } catch (err) { /* só nesta aba */ }
+        location.reload();
+      } catch (err) { toast(err.message, true); b.disabled = false; b.textContent = 'Entrar'; }
+    });
+  }
+
+  desenhar();
+  $('nova-carga').disabled = $('novo-salario').disabled = true;
+
+  (async () => {
+    if (!(login && login.token)) { telaLogin(''); return; }
+    const bs = el('button', 'btn sec sair', (login.nome ? login.nome.split(' ')[0] + ' · ' : '') + 'Sair');
+    bs.type = 'button'; bs.onclick = () => sair('');
+    document.querySelector('.topo').append(bs);
+    const faixa = $('faixa');
+    try {
+      const r = await chamar('carregarEquipe');
+      estado.funcionarios = r.funcionario || []; estado.cargas = r.carga || []; estado.salarios = r.salario || [];
+      carregou.funcionarios = carregou.cargas = carregou.salarios = true;
+      db = true;
+      $('nova-carga').disabled = $('novo-salario').disabled = false;
+      faixa.hidden = estado.funcionarios.length > 0;
+      faixa.className = 'faixa';
+      faixa.textContent = 'Nenhum funcionário ainda. Toque em + Adicionar no setor e turno certos para incluir o primeiro.';
+      desenhar();
+    } catch (err) {
+      if (!login) return;
+      faixa.className = 'faixa erro';
+      faixa.textContent = /acesso a esta parte/.test(err.message) ? 'Seu usuário não tem acesso à equipe. Só quem tem Acesso total vê o organograma.' : 'Não consegui carregar a equipe: ' + err.message;
+    }
+  })();
+})();
+</script>
+</body>
+</html>
