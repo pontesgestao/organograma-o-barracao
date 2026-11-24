@@ -232,7 +232,7 @@ label.c input:focus, label.c select:focus { outline: none; border-color: var(--m
   async function postar(corpo) {
     let r;
     try { r = await fetch(URL_API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) }); }
-    catch (e) { throw new Error('Sem conexão. Confira a internet e tente de novo.'); }
+    catch (e) { throw new Error('O Google não respondeu. Se a internet está ok, falta liberar a implantação do painel para "Qualquer pessoa" (Implantar → Gerenciar implantações).'); }
     try { return await r.json(); } catch (e) { throw new Error('O painel respondeu de um jeito inesperado (HTTP ' + r.status + ').'); }
   }
   async function chamar(fn, ...args) {
